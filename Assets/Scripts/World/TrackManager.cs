@@ -190,28 +190,51 @@ namespace CosmicRunner.World
 
         private void CreateProceduralMaterials()
         {
-            Shader standardShader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            // Material có sẵn trong Resources (luôn kèm theo build, shader Standard không bị strip).
+            // Không dùng Shader.Find("Universal Render Pipeline/Lit") nữa vì project không có URP pipeline asset.
+            roadMaterial = Resources.Load<Material>("Materials/RoadMat");
+            obstacleMaterial = Resources.Load<Material>("Materials/ObstacleMat");
+            coinMaterial = Resources.Load<Material>("Materials/CoinMat");
 
-            // Mặt đường: Xanh đen viễn tưởng
-            roadMaterial = new Material(standardShader);
-            roadMaterial.color = new Color(0.08f, 0.09f, 0.14f);
-
-            // Chướng ngại vật: Đỏ neon phát sáng
-            obstacleMaterial = new Material(standardShader);
-            obstacleMaterial.color = new Color(1f, 0.15f, 0.3f);
-            if (obstacleMaterial.HasProperty("_EmissionColor"))
+            if (roadMaterial == null || obstacleMaterial == null || coinMaterial == null)
             {
-                obstacleMaterial.EnableKeyword("_EMISSION");
-                obstacleMaterial.SetColor("_EmissionColor", new Color(1f, 0.15f, 0.3f) * 1.5f);
-            }
+                Shader standardShader = Shader.Find("Standard");
+                if (standardShader == null)
+                {
+                    Debug.LogError("[CosmicRunner] Khong tim thay material trong Resources va khong tim thay shader Standard!");
+                    return;
+                }
 
-            // Tinh thể / Xu: Vàng Neon phát sáng
-            coinMaterial = new Material(standardShader);
-            coinMaterial.color = new Color(1f, 0.85f, 0.1f);
-            if (coinMaterial.HasProperty("_EmissionColor"))
-            {
-                coinMaterial.EnableKeyword("_EMISSION");
-                coinMaterial.SetColor("_EmissionColor", new Color(1f, 0.85f, 0.1f) * 1.8f);
+                // Mặt đường: Xanh đen viễn tưởng
+                if (roadMaterial == null)
+                {
+                    roadMaterial = new Material(standardShader);
+                    roadMaterial.color = new Color(0.08f, 0.09f, 0.14f);
+                }
+
+                // Chướng ngại vật: Đỏ neon phát sáng
+                if (obstacleMaterial == null)
+                {
+                    obstacleMaterial = new Material(standardShader);
+                    obstacleMaterial.color = new Color(1f, 0.15f, 0.3f);
+                    if (obstacleMaterial.HasProperty("_EmissionColor"))
+                    {
+                        obstacleMaterial.EnableKeyword("_EMISSION");
+                        obstacleMaterial.SetColor("_EmissionColor", new Color(1f, 0.15f, 0.3f) * 1.5f);
+                    }
+                }
+
+                // Tinh thể / Xu: Vàng Neon phát sáng
+                if (coinMaterial == null)
+                {
+                    coinMaterial = new Material(standardShader);
+                    coinMaterial.color = new Color(1f, 0.85f, 0.1f);
+                    if (coinMaterial.HasProperty("_EmissionColor"))
+                    {
+                        coinMaterial.EnableKeyword("_EMISSION");
+                        coinMaterial.SetColor("_EmissionColor", new Color(1f, 0.85f, 0.1f) * 1.8f);
+                    }
+                }
             }
         }
     }

@@ -50,17 +50,28 @@ namespace CosmicRunner.Core
             playerObj.transform.rotation = Quaternion.Euler(90f, 0, 0); // Nằm ngang dạng phi thuyền lướt
             playerObj.transform.localScale = new Vector3(0.9f, 1.4f, 0.6f);
 
-            // Gắn vật liệu phi thuyền màu xanh neon
-            Shader standardShader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            Material shipMat = new Material(standardShader);
-            shipMat.color = new Color(0f, 0.9f, 1f);
-            if (shipMat.HasProperty("_EmissionColor"))
+            // Gắn vật liệu phi thuyền màu xanh neon (material có sẵn trong Resources, luôn kèm theo build; không dùng Shader.Find vì shader có thể bị strip khỏi build)
+            Material shipMat = Resources.Load<Material>("Materials/ShipMat");
+            if (shipMat == null)
             {
-                shipMat.EnableKeyword("_EMISSION");
-                shipMat.SetColor("_EmissionColor", new Color(0f, 0.9f, 1f) * 1.2f);
+                Shader s = Shader.Find("Standard");
+                if (s != null)
+                {
+                    shipMat = new Material(s);
+                    shipMat.color = new Color(0f, 0.9f, 1f);
+                    if (shipMat.HasProperty("_EmissionColor"))
+                    {
+                        shipMat.EnableKeyword("_EMISSION");
+                        shipMat.SetColor("_EmissionColor", new Color(0f, 0.9f, 1f) * 1.2f);
+                    }
+                }
+                else
+                {
+                    Debug.LogError("[CosmicRunner] Khong tim thay shader Standard, phi thuyen khong co material!");
+                }
             }
             var playerRenderer = playerObj.GetComponent<MeshRenderer>();
-            if (playerRenderer != null) playerRenderer.material = shipMat;
+            if (playerRenderer != null && shipMat != null) playerRenderer.material = shipMat;
 
             // Bỏ capsule collider mặc định, dùng CharacterController
             var defaultCol = playerObj.GetComponent<Collider>();
