@@ -65,6 +65,16 @@ namespace CosmicRunner.UI
 
         private void Update()
         {
+            // Fallback chạm trực tiếp: nếu nút bấm UI không nhận chạm (EventSystem/raycast lỗi),
+            // chạm bất cứ đâu ở menu cũng bắt đầu game (dùng Input touch trực tiếp, không qua uGUI).
+            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Menu)
+            {
+                bool tapped = false;
+                if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) tapped = true;
+                if (Input.GetMouseButtonDown(0)) tapped = true;
+                if (tapped) TryStartGame();
+            }
+
             if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing)
             {
                 if (speedText != null)
@@ -72,6 +82,15 @@ namespace CosmicRunner.UI
                     speedText.text = $"SPEED: {GameManager.Instance.CurrentSpeed:F1} m/s";
                 }
             }
+        }
+
+        // Bắt đầu game từ menu, chỉ chạy khi đang ở trạng thái Menu (chặn bấm đúp).
+        private void TryStartGame()
+        {
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.Menu) return;
+            try { SoundManager.Instance?.PlayButtonClick(); } catch (System.Exception e) { Debug.LogError("[CosmicRunner] PlayButtonClick loi: " + e.Message); }
+            TrackManager.Instance?.ResetTrack();
+            GameManager.Instance?.StartGame();
         }
 
         public void ShowMainMenu()
@@ -158,9 +177,7 @@ namespace CosmicRunner.UI
 
             CreateButton("PlayButton", mainMenuPanel.transform, "BẮT ĐẦU CHƠI", font, 44, new Vector2(0, -260), new Vector2(480, 110), new Color(0.1f, 0.7f, 1f), () =>
             {
-                SoundManager.Instance?.PlayButtonClick();
-                TrackManager.Instance?.ResetTrack();
-                GameManager.Instance?.StartGame();
+                TryStartGame();
             });
 
             // --- 2. IN-GAME HUD PANEL ---
@@ -209,6 +226,7 @@ namespace CosmicRunner.UI
 
             Image img = panel.GetComponent<Image>();
             img.color = bgColor;
+            img.raycastTarget = false; // Panel nền không chặn chạm, nút bấm bên trong tự nhận
             return panel;
         }
 
@@ -228,6 +246,7 @@ namespace CosmicRunner.UI
             txt.fontStyle = style;
             txt.color = color;
             txt.alignment = TextAnchor.MiddleCenter;
+            txt.raycastTarget = false; // Chữ không chặn chạm
             return txt;
         }
 
@@ -261,6 +280,7 @@ namespace CosmicRunner.UI
             txt.fontStyle = FontStyle.Bold;
             txt.color = Color.white;
             txt.alignment = TextAnchor.MiddleCenter;
+            txt.raycastTarget = false; // Chữ trên nút không chặn chạm, nút tự nhận
         }
     }
 }
