@@ -78,6 +78,11 @@ namespace CosmicRunner.Core
             OnCoinsUpdated?.Invoke(0);
         }
 
+        public void BackToMenu()
+        {
+            CurrentState = GameState.Menu;
+        }
+
         public void AddCoin(int amount = 1)
         {
             if (CurrentState != GameState.Playing) return;

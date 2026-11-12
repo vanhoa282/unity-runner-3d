@@ -2,6 +2,7 @@ using CosmicRunner.Audio;
 using CosmicRunner.Core;
 using CosmicRunner.World;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CosmicRunner.UI
@@ -26,6 +27,14 @@ namespace CosmicRunner.UI
         private Text finalScoreText;
         private Text finalCoinsText;
         private Text newRecordText;
+
+        // Chẩn đoán trên màn hình (debug build #9)
+        private Text debugText;
+        private int debugTapCount;
+        private Vector2 debugLastTapPos;
+        private float debugFpsTimer;
+        private int debugFpsFrames;
+        private float debugFps;
 
         private void Awake()
         {
@@ -65,14 +74,48 @@ namespace CosmicRunner.UI
 
         private void Update()
         {
+            // Đếm chạm + FPS để chẩn đoán trên màn hình (debug build #9):
+            // - FPS chạy = vòng lặp game đang sống; FPS đứng yên = game đơ.
+            // - "Cham" tăng = chạm tới được Unity; không tăng = chạm không tới game.
+            bool anyTap = false;
+            if (Input.touchCount > 0)
+            {
+                foreach (Touch t in Input.touches)
+                {
+                    if (t.phase == TouchPhase.Began)
+                    {
+                        anyTap = true;
+                        debugLastTapPos = t.position;
+                    }
+                }
+            }
+            if (Input.GetMouseButtonDown(0))
+            {
+                anyTap = true;
+                debugLastTapPos = Input.mousePosition;
+            }
+            if (anyTap) debugTapCount++;
+
+            debugFpsFrames++;
+            debugFpsTimer += Time.unscaledDeltaTime;
+            if (debugFpsTimer >= 0.5f)
+            {
+                debugFps = debugFpsFrames / debugFpsTimer;
+                debugFpsFrames = 0;
+                debugFpsTimer = 0f;
+            }
+            if (debugText != null)
+            {
+                string gmState = GameManager.Instance == null ? "GM:NULL" : GameManager.Instance.CurrentState.ToString();
+                string esState = FindFirstObjectByType<EventSystem>() == null ? "ES:NULL" : "ES:OK";
+                debugText.text = $"B9 | FPS:{debugFps:F0} | {gmState} | {esState} | Cham:{debugTapCount} ({debugLastTapPos.x:F0},{debugLastTapPos.y:F0})";
+            }
+
             // Fallback chạm trực tiếp: nếu nút bấm UI không nhận chạm (EventSystem/raycast lỗi),
             // chạm bất cứ đâu ở menu cũng bắt đầu game (dùng Input touch trực tiếp, không qua uGUI).
             if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Menu)
             {
-                bool tapped = false;
-                if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began) tapped = true;
-                if (Input.GetMouseButtonDown(0)) tapped = true;
-                if (tapped) TryStartGame();
+                if (anyTap) TryStartGame();
             }
 
             if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Playing)
@@ -210,8 +253,12 @@ namespace CosmicRunner.UI
             {
                 SoundManager.Instance?.PlayButtonClick();
                 TrackManager.Instance?.ResetTrack();
+                GameManager.Instance?.BackToMenu();
                 ShowMainMenu();
             });
+
+            // Dòng chẩn đoán luôn hiện trên màn hình (debug build #9)
+            debugText = CreateText("DebugText", transform, "B9 | dang khoi tao...", font, 28, FontStyle.Normal, Color.yellow, new Vector2(0, 880), new Vector2(1000, 80));
         }
 
         private GameObject CreatePanel(string name, Transform parent, Color bgColor)
