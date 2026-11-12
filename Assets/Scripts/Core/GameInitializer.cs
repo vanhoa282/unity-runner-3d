@@ -70,6 +70,13 @@ namespace CosmicRunner.Core
                     Debug.LogError("[CosmicRunner] Khong tim thay shader Standard, phi thuyen khong co material!");
                 }
             }
+            // Lưới an toàn: material load được nhưng shader bị null (ref hỏng / shader bị strip
+            // khỏi build) thì gán lại shader Standard tìm được lúc chạy.
+            if (shipMat != null && shipMat.shader == null)
+            {
+                Shader s = Shader.Find("Standard");
+                if (s != null) shipMat.shader = s;
+            }
             var playerRenderer = playerObj.GetComponent<MeshRenderer>();
             if (playerRenderer != null && shipMat != null) playerRenderer.material = shipMat;
 

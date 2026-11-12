@@ -236,6 +236,22 @@ namespace CosmicRunner.World
                     }
                 }
             }
+
+            // Lưới an toàn: material load được nhưng shader bị null (ref hỏng / shader bị strip
+            // khỏi build) thì gán lại shader Standard tìm được lúc chạy — không để render màu hồng lỗi.
+            RepairMaterialShader(ref roadMaterial);
+            RepairMaterialShader(ref obstacleMaterial);
+            RepairMaterialShader(ref coinMaterial);
+        }
+
+        private static void RepairMaterialShader(ref Material mat)
+        {
+            if (mat != null && mat.shader == null)
+            {
+                Shader s = Shader.Find("Standard");
+                if (s != null) mat.shader = s;
+                else Debug.LogError("[CosmicRunner] Khong tim thay shader Standard luc chay, material se hong!");
+            }
         }
     }
 

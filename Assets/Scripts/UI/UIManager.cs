@@ -108,7 +108,7 @@ namespace CosmicRunner.UI
             {
                 string gmState = GameManager.Instance == null ? "GM:NULL" : GameManager.Instance.CurrentState.ToString();
                 string esState = FindFirstObjectByType<EventSystem>() == null ? "ES:NULL" : "ES:OK";
-                debugText.text = $"B9 | FPS:{debugFps:F0} | {gmState} | {esState} | Cham:{debugTapCount} ({debugLastTapPos.x:F0},{debugLastTapPos.y:F0})";
+                debugText.text = $"B10 | FPS:{debugFps:F0} | {gmState} | {esState} | Cham:{debugTapCount} ({debugLastTapPos.x:F0},{debugLastTapPos.y:F0})";
             }
 
             // Fallback chạm trực tiếp: nếu nút bấm UI không nhận chạm (EventSystem/raycast lỗi),
@@ -257,8 +257,12 @@ namespace CosmicRunner.UI
                 ShowMainMenu();
             });
 
-            // Dòng chẩn đoán luôn hiện trên màn hình (debug build #9)
-            debugText = CreateText("DebugText", transform, "B9 | dang khoi tao...", font, 28, FontStyle.Normal, Color.yellow, new Vector2(0, 880), new Vector2(1000, 80));
+            // Dòng chẩn đoán luôn hiện trên màn hình (debug build #10):
+            // Neo vào MÉP TRÊN canvas (anchor y=1) để không bị đẩy ra khỏi màn hình
+            // khi game chạy ngang (landscape) — bản #9 đặt y=880 theo canvas dọc nên bị mất.
+            debugText = CreateText("DebugText", transform, "B10 | dang khoi tao...", font, 28, FontStyle.Normal, Color.yellow, new Vector2(0, -40), new Vector2(1000, 80));
+            debugText.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            debugText.rectTransform.anchorMax = new Vector2(0.5f, 1f);
         }
 
         private GameObject CreatePanel(string name, Transform parent, Color bgColor)
